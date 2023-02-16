@@ -1,2 +1,3 @@
-# Robot-arm-control-with-RL
+# Robot arm control with Reinforcement Learning
+
 Robot arm/manipulator control using reinforcement learning algorithms : DDPG, TD3...
