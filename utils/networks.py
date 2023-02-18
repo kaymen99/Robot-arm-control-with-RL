@@ -2,11 +2,6 @@ import os
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.layers import Dense
-import os
-import tensorflow as tf
-import tensorflow.keras as keras
-from tensorflow.keras.layers import Dense
-
 
 class ActorNetwork(keras.Model):
     def __init__(self, n_actions, name, model, checkpoints_dir="ckp/"):
