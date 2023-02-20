@@ -1,5 +1,6 @@
-import gymnasium as gym
 import numpy as np
+import gymnasium as gym
+import panda_gym
 from agents.ddpg import DDPGAgent
 from utils.HER import her_augmentation
 
