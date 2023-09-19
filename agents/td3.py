@@ -1,5 +1,10 @@
-## Actor-critic networks parameters :
+import numpy as np
+import tensorflow as tf
+import tensorflow.keras as keras
+from replay_memory.ReplayBuffer import ReplayBuffer
+from utils.networks import ActorNetwork, CriticNetwork
 
+## Actor-critic networks parameters :
 # actor learning rate
 alpha = 0.001
 
@@ -7,7 +12,6 @@ alpha = 0.001
 beta = 0.002
 
 ## TD3 algorithms paramters
-
 # discount factor
 gamma = 0.99
 
@@ -25,6 +29,7 @@ batch_size = 256
 
 class TD3Agent:
     def __init__(self, env, input_dims, update_actor_interval=2, warmup=500):
+        # setup hyperparameters values
         self.gamma = gamma
         self.tau = tau
         self.batch_size = batch_size
@@ -34,16 +39,18 @@ class TD3Agent:
         self.update_actor_interval = update_actor_interval
         self.noise_factor = noise_factor
 
+        # setup environment
         self.env = env
         self.n_actions = env.action_space.shape[0]
         self.max_action = env.action_space.high[0]
         self.min_action = env.action_space.low[0]
 
+        # setup replay buffer memory
         self.memory = ReplayBuffer(max_size, input_dims, self.n_actions)
 
+        # initialize actor and critic netwprks
         self._initialize_networks(self.n_actions)
         self.update_parameters(tau=1)
-
 
     def choose_action(self, observation):
         """
@@ -74,7 +81,6 @@ class TD3Agent:
 
         return mu_star
 
-    
     def remember(self, state, action, reward, new_state, done):
         """
         Interface function between agent and buffer, used to store transitions
@@ -88,7 +94,7 @@ class TD3Agent:
         This function trains the agent using the following steps:
         1. Sample a random batch of old experiences from memory.
         2. Apply gradient descent on the two critic networks.
-        3. Apply gradient descent on the actor network in a delayed 
+        3. Apply gradient descent on the actor network in a delayed
         manner: actor is updated once for every two updates of critic networks.
 
         Returns:
@@ -98,7 +104,7 @@ class TD3Agent:
         # Check if there are enough experiences in memory to begin training
         if self.memory.counter < self.batch_size:
             return
-        
+
         # Step 1: Sample a random batch of old experiences from memory
         states, actions, rewards, new_states, dones = self.memory.sample(self.batch_size)
         states = tf.convert_to_tensor(states, dtype=tf.float32)
@@ -134,18 +140,18 @@ class TD3Agent:
         self.learn_step_counter += 1
         if self.learn_step_counter % self.update_actor_interval != 0:
             return
-        
+
         # Apply gradient descent on the actor network
         with tf.GradientTape() as tape:
             new_actions = self.actor(states)
             critic_1_value = self.critic_1(states, new_actions)
-            actor_loss = - tf.math.reduce_mean(critic_1_value)
+            actor_loss = -tf.math.reduce_mean(critic_1_value)
 
         # Compute actor gradients and apply gradient descent
         actor_gardient = tape.gradient(actor_loss, self.actor.trainable_variables)
         self.actor.optimizer.apply_gradients(zip(actor_gardient, self.actor.trainable_variables))
 
-         # Update actor/critic target networks weights with soft update rule
+        # Update actor/critic target networks weights with soft update rule
         self.update_parameters()
 
     def update_parameters(self, tau=None):
@@ -156,7 +162,7 @@ class TD3Agent:
             new_weight = tau * old_weight + (1 - tau) * old_target_weight
 
         Args:
-            tau (float, optional): The interpolation parameter for the soft update. 
+            tau (float, optional): The interpolation parameter for the soft update.
                 If not provided, the default tau value from the class attributes is used.
 
         Returns:
@@ -195,7 +201,7 @@ class TD3Agent:
     def _initialize_networks(self, n_actions):
         model = "TD3"
         self.actor = ActorNetwork(n_actions, name="actor", model=model)
-        self.critic_1 = CriticNetwork(name="critic_1",model=model)
+        self.critic_1 = CriticNetwork(name="critic_1", model=model)
         self.critic_2 = CriticNetwork(name="critic_2", model=model)
 
         self.target_actor = ActorNetwork(n_actions, name="target_actor", model=model)
