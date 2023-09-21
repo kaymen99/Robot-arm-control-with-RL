@@ -6,6 +6,8 @@ from tensorflow.keras.layers import Dense
 class ActorNetwork(keras.Model):
     def __init__(self, n_actions, name, model, checkpoints_dir="ckp/"):
         super(ActorNetwork, self).__init__()
+        if not os.path.exists(checkpoints_dir):
+            os.mkdir(checkpoints_dir)
         self.checkpoints_file = os.path.join(checkpoints_dir + model, name + ".h5")
 
         self.layer1 = Dense(512, activation="relu")
@@ -25,7 +27,9 @@ class ActorNetwork(keras.Model):
 class CriticNetwork(keras.Model):
     def __init__(self, name, model, checkpoints_dir="ckp/"):
         super(CriticNetwork, self).__init__()
-        self.checkpoints_file = os.path.join(checkpoints_dir + model, name  + ".h5")
+        if not os.path.exists(checkpoints_dir):
+            os.mkdir(checkpoints_dir)
+        self.checkpoints_file = os.path.join(checkpoints_dir + model, name + ".h5")
 
         self.layer1 = Dense(512, activation="relu")
         self.layer2 = Dense(256, activation="relu")
